@@ -79,6 +79,7 @@ public class WaterMarkTest2 {
         /**
          * method of dealing with late arrive data
          */
+
         SingleOutputStreamOperator<String> stringSingleOutputStreamOperator = dataStreamSource.assignTimestampsAndWatermarks(new AscendingTimestampsExtractor<String>() {
             public long extractAscendingTimestamp(String element) {
                 String[] split = element.split(",");
@@ -112,7 +113,7 @@ public class WaterMarkTest2 {
                             out.collect("数据为：" + next);
                         }
                     }
-                })c;
+                });
 
 
         //非延迟数据处理流程

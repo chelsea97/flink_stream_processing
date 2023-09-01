@@ -1,8 +1,11 @@
 package com.atguigu.operatorChain;
 
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
+import javax.security.auth.login.AppConfigurationEntry;
 
 /**
  * operation chaining advantage: decrease serialization and deserialization
@@ -11,12 +14,17 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  * 4. reduce thread exchange
  * operation chaining disadvantage: all tasks run in the same slot, make computation slow if task is complex
  * solution: operator new chain and disable chain manually
+ * taskslots assigns taskmanager's memory
  */
 
 
 public class OperatorChainTest {
     public static void main(String[] args) throws Exception{
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        //StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        Configuration configuration = new Configuration();
+        configuration.setString("taskmanager.numberofSlots","3");
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(configuration);
         //disable operator chaining for streaming operator
         env.disableOperatorChaining();
         env.setParallelism(1);
@@ -34,7 +42,11 @@ public class OperatorChainTest {
                 System.out.println("22222"+value);
                 return value;
             }
-        }).startNewChain();
+        }).startNewChain()
+                //group slot
+                //if two configuration are not in the same group, these two operators cannot share the same group
+                //different operators will occupy other slot
+                .slotSharingGroup("sharegroup");
         env.execute();
     }
 }
